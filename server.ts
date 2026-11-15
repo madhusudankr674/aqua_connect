@@ -36,6 +36,10 @@ async function createServer() {
   const app = express();
 
   app.use(express.json({ limit: '8mb' }));
+  app.use((_req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    next();
+  });
 
   app.get('/api/health', (_req, res) => {
     res.json({

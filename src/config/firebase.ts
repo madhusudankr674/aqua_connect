@@ -1,12 +1,39 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  browserPopupRedirectResolver,
+  browserSessionPersistence,
+  getAuth,
+  GoogleAuthProvider,
+  indexedDBLocalPersistence,
+  initializeAuth,
+  inMemoryPersistence,
+  type Auth,
+} from 'firebase/auth';
 import { doc, getDocFromServer, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
+
+function createAuthInstance(): Auth {
+  try {
+    return initializeAuth(app, {
+      persistence: [
+        indexedDBLocalPersistence,
+        browserLocalPersistence,
+        browserSessionPersistence,
+        inMemoryPersistence,
+      ],
+      popupRedirectResolver: browserPopupRedirectResolver,
+    });
+  } catch {
+    return getAuth(app);
+  }
+}
+
+export const auth = createAuthInstance();
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
@@ -14,6 +41,7 @@ googleProvider.setCustomParameters({
 });
 
 export const BOOTSTRAPPED_ADMIN_EMAIL = 'madhusudankr06@gmail.com';
+export const FIREBASE_PROJECT_ID = firebaseConfig.projectId;
 
 export enum OperationType {
   CREATE = 'create',

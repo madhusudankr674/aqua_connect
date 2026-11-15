@@ -4,13 +4,15 @@ import {
   AlertCircle,
   CheckCircle2,
   Copy,
+  ExternalLink,
   LogIn,
   LogOut,
   Shield,
   UserCheck,
 } from 'lucide-react';
+import { FIREBASE_PROJECT_ID } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { formatAuthError } from '../services/authService';
+import { formatAuthError, isEmbeddedIframe } from '../services/authService';
 import { sanitizeMobile } from '../services/validation';
 
 export function LoginPage() {
@@ -48,6 +50,8 @@ export function LoginPage() {
 
   const activeError = errorMsg || authError;
   const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '/login';
+  const embedded = isEmbeddedIframe();
   const isUnauthorizedDomain = Boolean(
     activeError && activeError.includes('Authorized domains')
   );
@@ -141,7 +145,7 @@ export function LoginPage() {
           {activeError && (
             <div
               role="alert"
-              className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 space-y-2.5"
+              className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 space-y-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5">
@@ -172,6 +176,15 @@ export function LoginPage() {
                     <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>{copiedDomain ? 'Copied' : 'Copy domain'}</span>
                   </button>
+                  <a
+                    href={`https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-sky-800 underline hover:text-sky-950"
+                  >
+                    <span>Open Firebase Auth Settings</span>
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
                 </div>
               )}
             </div>
@@ -188,14 +201,26 @@ export function LoginPage() {
               <span>{signingIn ? 'Signing in with Google...' : 'Continue with Google'}</span>
             </button>
 
-            <button
-              type="button"
-              disabled={signingIn}
-              onClick={() => void handleRedirectLogin()}
-              className="text-xs font-medium text-sky-700 underline hover:text-sky-900 disabled:opacity-50 cursor-pointer"
-            >
-              Having trouble with popups? Sign in using page redirect instead
-            </button>
+            {embedded ? (
+              <a
+                href={currentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-sky-700 underline hover:text-sky-900"
+              >
+                <span>Having trouble with popup sign-in? Open portal in a new tab</span>
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled={signingIn}
+                onClick={() => void handleRedirectLogin()}
+                className="text-xs font-medium text-sky-700 underline hover:text-sky-900 disabled:opacity-50 cursor-pointer"
+              >
+                Having trouble with popups? Sign in using page redirect instead
+              </button>
+            )}
           </div>
         </div>
       ) : (

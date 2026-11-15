@@ -1,4 +1,5 @@
 import {
+  browserPopupRedirectResolver,
   getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
@@ -24,9 +25,17 @@ import type { UserProfile, UserRole } from '../types/user';
 
 const inFlightProfiles = new Map<string, Promise<UserProfile>>();
 
+export function isEmbeddedIframe(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
 function extractErrorCode(err: unknown): string {
   if (err && typeof err === 'object' && 'code' in err && typeof err.code === 'string') {
-    return err.code;
+    return err.code.toLowerCase();
   }
   const msg = err instanceof Error ? err.message : String(err);
   const match = msg.match(/auth\/[a-z0-9-]+/i);
@@ -39,15 +48,22 @@ export function formatAuthError(err: unknown): string {
 
   switch (code) {
     case 'auth/popup-closed-by-user':
-      return 'The Google sign-in popup was closed before completing login. Click "Continue with Google" to try again.';
+      return 'The Google sign-in window was closed before completing login. Click "Continue with Google" to try again.';
     case 'auth/cancelled-popup-request':
       return 'Another sign-in popup was already open. Please wait a moment and click "Continue with Google" once.';
     case 'auth/popup-blocked':
-      return 'Your browser blocked the Google sign-in popup. Please allow popups for this site or use the redirect sign-in option below.';
+      return isEmbeddedIframe()
+        ? 'Your browser blocked the Google sign-in popup inside this embedded view. Allow popups for this site or open Aqua Connect in a new browser tab to sign in.'
+        : 'Your browser blocked the Google sign-in popup. Allow popups for this site or use the redirect sign-in option below.';
     case 'auth/unauthorized-domain':
       return `Sign-in is not yet authorized for "${host}". Add "${host}" under Firebase Console → Authentication → Settings → Authorized domains.`;
     case 'auth/operation-not-allowed':
       return 'Google Sign-In is currently disabled in Firebase Authentication for this project.';
+    case 'auth/operation-not-supported-in-this-environment':
+    case 'auth/web-storage-unsupported':
+      return 'Browser storage or third-party cookies are restricted in this embedded frame. Please open the portal in a new browser tab to sign in.';
+    case 'auth/internal-error':
+      return 'Google sign-in could not complete in this window (often caused by blocked popups or restricted third-party storage). Try allowing popups or opening the portal in a new browser tab.';
     case 'auth/network-request-failed':
       return 'Network connection error while contacting Google Sign-In. Please check your internet connection and try again.';
     case 'auth/user-disabled':
@@ -71,15 +87,16 @@ export function formatAuthError(err: unknown): string {
 
 export async function signInWithGooglePopup(): Promise<User | null> {
   try {
-    const credential = await signInWithPopup(auth, googleProvider);
+    const credential = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
     return credential.user;
   } catch (err) {
     const code = extractErrorCode(err);
     if (
-      code === 'auth/popup-blocked' ||
-      code === 'auth/operation-not-supported-in-this-environment'
+      !isEmbeddedIframe() &&
+      (code === 'auth/popup-blocked' ||
+        code === 'auth/operation-not-supported-in-this-environment')
     ) {
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
       return null;
     }
     throw err;
@@ -87,11 +104,16 @@ export async function signInWithGooglePopup(): Promise<User | null> {
 }
 
 export async function signInWithGoogleRedirect(): Promise<void> {
-  await signInWithRedirect(auth, googleProvider);
+  if (isEmbeddedIframe()) {
+    throw new Error(
+      'Redirect sign-in cannot run inside an embedded frame. Please open the portal in a new browser tab.'
+    );
+  }
+  await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
 }
 
 export async function consumeGoogleRedirectResult(): Promise<User | null> {
-  const result = await getRedirectResult(auth);
+  const result = await getRedirectResult(auth, browserPopupRedirectResolver);
   return result?.user ?? null;
 }
 
@@ -149,7 +171,6 @@ function buildFallbackProfile(user: User, role: UserRole): UserProfile {
 }
 
 async function syncUserProfileInternal(user: User): Promise<UserProfile> {
-  const userPath = `users/${user.uid}`;
   const userRef = doc(db, 'users', user.uid);
   const resolvedRole = await resolveUserRole(user);
 
@@ -174,7 +195,6 @@ async function syncUserProfileInternal(user: User): Promise<UserProfile> {
   try {
     await setDoc(userRef, newProfile);
   } catch (error) {
-    // Re-read in case of concurrent creation before falling back
     try {
       const retrySnap = await getDoc(userRef);
       if (retrySnap.exists()) {
