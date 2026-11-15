@@ -14,7 +14,11 @@
   ```
   *(Note: If Firebase Storage bucket rules are not yet deployed, `storageService.ts` automatically falls back to `/api/uploads` on the Express server.)*
 
-## 3. Google Cloud Run Deployment
+## 3. Vercel Deployment
+- `vercel.json` is configured for Vite static SPA output (`npm run build` -> `dist/`).
+- Set `VITE_GOOGLE_MAPS_API_KEY` in Vercel Project Settings → Environment Variables, and add your `*.vercel.app` domain to Firebase Console → Authentication → Authorized Domains and Google Cloud Console API key HTTP referrers.
+
+## 4. Google Cloud Run Deployment
 ```bash
 # Build production frontend bundle
 npm run build

@@ -1,7 +1,6 @@
 import { GraduationCap, Layers, MapPin, ShieldCheck } from 'lucide-react';
 import { ScientificDisclaimer } from '../components/ScientificDisclaimer';
-
-const TOWER_IMG = '/src/assets/images/panchayat_water_tower_1794739095111.jpg';
+import TOWER_IMG from '../assets/images/panchayat_water_tower_1794739095111.jpg';
 
 export function AboutUsPage() {
   return (

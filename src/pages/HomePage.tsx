@@ -11,11 +11,10 @@ import {
 import { ScientificDisclaimer } from '../components/ScientificDisclaimer';
 import { useLanguage } from '../contexts/LanguageContext';
 import { CURATED_AWARENESS_ARTICLES } from '../services/awarenessService';
-
-const HERO_IMG = '/src/assets/images/hero_community_water_1794739093987.jpg';
-const STORAGE_IMG = '/src/assets/images/awareness_safe_storage_1794739093290.jpg';
-const BOILING_IMG = '/src/assets/images/awareness_boiling_water_1794739094396.jpg';
-const TOWER_IMG = '/src/assets/images/panchayat_water_tower_1794739095111.jpg';
+import HERO_IMG from '../assets/images/hero_community_water_1794739093987.jpg';
+import STORAGE_IMG from '../assets/images/awareness_safe_storage_1794739093290.jpg';
+import BOILING_IMG from '../assets/images/awareness_boiling_water_1794739094396.jpg';
+import TOWER_IMG from '../assets/images/panchayat_water_tower_1794739095111.jpg';
 
 const DEMO_STATS = [
   {

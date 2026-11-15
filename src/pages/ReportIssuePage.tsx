@@ -14,6 +14,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { submitComplaint } from '../services/complaintService';
 import { uploadComplaintPhotographs } from '../services/storageService';
 import {
+  compressImage,
+  formatFileSize,
+  type CompressedImageResult,
+} from '../utils/imageProcessor';
+import {
   extractMobileLast4,
   MAX_IMAGE_FILES,
   sanitizeMobile,
@@ -52,7 +57,8 @@ export function ReportIssuePage() {
   const [longitude, setLongitude] = useState<number | null>(null);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [compressedPreviews, setCompressedPreviews] = useState<CompressedImageResult[]>([]);
+  const [compressingImages, setCompressingImages] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -70,34 +76,38 @@ export function ReportIssuePage() {
     }
   }, [profile]);
 
-  useEffect(() => {
-    return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [previewUrls]);
-
-  const handleFileChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(ev.target.files || []);
+    ev.target.value = '';
     if (incoming.length === 0) return;
 
-    const combined = [...selectedFiles, ...incoming];
-    const validationMsg = validateImageFiles(combined);
+    const combinedRaw = [...selectedFiles, ...incoming];
+    const validationMsg = validateImageFiles(combinedRaw);
     if (validationMsg) {
       setUploadError(validationMsg);
       return;
     }
 
     setUploadError(null);
-    const nextPreviews = incoming.map((file) => URL.createObjectURL(file));
-    setSelectedFiles(combined);
-    setPreviewUrls((prev) => [...prev, ...nextPreviews]);
-    ev.target.value = '';
+    setCompressingImages(true);
+    try {
+      const results = await Promise.all(
+        incoming.map((file) => compressImage(file, 800, 0.7))
+      );
+      setSelectedFiles((prev) => [...prev, ...results.map((r) => r.file)]);
+      setCompressedPreviews((prev) => [...prev, ...results]);
+    } catch (err) {
+      setUploadError(
+        err instanceof Error ? err.message : 'Unable to compress selected photograph.'
+      );
+    } finally {
+      setCompressingImages(false);
+    }
   };
 
   const removeFile = (idx: number) => {
-    URL.revokeObjectURL(previewUrls[idx]);
     setSelectedFiles((prev) => prev.filter((_, i) => i !== idx));
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== idx));
+    setCompressedPreviews((prev) => prev.filter((_, i) => i !== idx));
     setUploadError(null);
   };
 
@@ -152,9 +162,8 @@ export function ReportIssuePage() {
   };
 
   const resetForm = () => {
-    previewUrls.forEach((url) => URL.revokeObjectURL(url));
     setSelectedFiles([]);
-    setPreviewUrls([]);
+    setCompressedPreviews([]);
     setDescription('');
     setLandmark('');
     setLatitude(null);
@@ -467,13 +476,17 @@ export function ReportIssuePage() {
           <div className="flex flex-wrap items-center gap-4">
             <label className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100 cursor-pointer">
               <ImagePlus className="h-4 w-4 text-sky-700" aria-hidden="true" />
-              <span>Select Photographs ({selectedFiles.length}/{MAX_IMAGE_FILES})</span>
+              <span>
+                {compressingImages
+                  ? 'Optimizing photograph...'
+                  : `Select Photographs (${selectedFiles.length}/${MAX_IMAGE_FILES})`}
+              </span>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
-                disabled={selectedFiles.length >= MAX_IMAGE_FILES}
-                onChange={handleFileChange}
+                disabled={compressingImages || selectedFiles.length >= MAX_IMAGE_FILES}
+                onChange={(e) => void handleFileChange(e)}
                 className="sr-only"
               />
             </label>
@@ -485,26 +498,36 @@ export function ReportIssuePage() {
             </p>
           )}
 
-          {previewUrls.length > 0 && (
+          {compressedPreviews.length > 0 && (
             <div className="grid gap-4 sm:grid-cols-3">
-              {previewUrls.map((url, idx) => (
+              {compressedPreviews.map((item, idx) => (
                 <div
-                  key={url}
-                  className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                  key={`${item.file.name}-${idx}`}
+                  className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
                 >
-                  <img
-                    src={url}
-                    alt={`Uploaded water observation preview ${idx + 1}`}
-                    className="h-40 w-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeFile(idx)}
-                    aria-label={`Remove photograph ${idx + 1}`}
-                    className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900/80 text-white hover:bg-rose-700 cursor-pointer"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                  <div className="relative">
+                    <img
+                      src={item.dataUrl}
+                      alt={`Uploaded water observation preview ${idx + 1}`}
+                      className="h-40 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFile(idx)}
+                      aria-label={`Remove photograph ${idx + 1}`}
+                      className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900/80 text-white hover:bg-rose-700 cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs text-slate-600 font-mono tabular-nums">
+                    <span>
+                      {formatFileSize(item.originalSize)} &rarr; {formatFileSize(item.compressedSize)}
+                    </span>
+                    <span className="font-semibold text-emerald-700">
+                      -{item.reductionPercent}%
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
