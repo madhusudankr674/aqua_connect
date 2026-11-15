@@ -260,15 +260,23 @@ export function ReportIssuePage() {
               </h2>
               <p className="mt-1 text-sm text-slate-700">{t.report.signInPromptDesc}</p>
             </div>
-            <button
-              type="button"
-              disabled={signingIn}
-              onClick={() => void signInWithGoogle().catch(() => undefined)}
-              className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 cursor-pointer whitespace-nowrap"
-            >
-              <LogIn className="h-4 w-4" aria-hidden="true" />
-              <span>{signingIn ? 'Signing in...' : t.report.signInBtn}</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                disabled={signingIn}
+                onClick={() => void signInWithGoogle('resident').catch(() => undefined)}
+                className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 cursor-pointer whitespace-nowrap"
+              >
+                <LogIn className="h-4 w-4" aria-hidden="true" />
+                <span>{signingIn ? 'Signing in...' : t.report.signInBtn}</span>
+              </button>
+              <Link
+                to="/login?portal=resident"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 whitespace-nowrap"
+              >
+                Residents Login
+              </Link>
+            </div>
           </div>
           {authError && (
             <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">

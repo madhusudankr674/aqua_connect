@@ -10,7 +10,21 @@ import {
   signOutUser,
   updateUserProfileDetails,
 } from '../services/authService';
-import type { UserProfile } from '../types/user';
+import type { LoginPortal, UserProfile } from '../types/user';
+
+const PORTAL_STORAGE_KEY = 'aqua_connect_login_portal';
+
+function readStoredPortal(): LoginPortal {
+  try {
+    const val = sessionStorage.getItem(PORTAL_STORAGE_KEY);
+    if (val === 'engineer' || val === 'pdo' || val === 'resident') {
+      return val;
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return 'resident';
+}
 
 interface AuthContextValue {
   firebaseUser: User | null;
@@ -18,11 +32,14 @@ interface AuthContextValue {
   authReady: boolean;
   signingIn: boolean;
   authError: string | null;
+  loginPortal: LoginPortal;
   isEngineerOrAdmin: boolean;
   isAdmin: boolean;
+  setLoginPortal: (portal: LoginPortal) => void;
   clearAuthError: () => void;
-  signInWithGoogle: () => Promise<User | null>;
-  signInWithRedirectFallback: () => Promise<void>;
+  signInWithGoogle: (portal?: LoginPortal) => Promise<User | null>;
+  signInWithRedirectFallback: (portal?: LoginPortal) => Promise<void>;
+  refreshProfile: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: { name: string; mobile: string; locality: string }) => Promise<void>;
 }
@@ -35,6 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [loginPortal, setLoginPortalState] = useState<LoginPortal>(readStoredPortal);
+
+  const setLoginPortal = (portal: LoginPortal) => {
+    setLoginPortalState(portal);
+    try {
+      sessionStorage.setItem(PORTAL_STORAGE_KEY, portal);
+    } catch {
+      // Ignore storage errors
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -71,8 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearAuthError = () => setAuthError(null);
 
-  const signInWithGoogle = async (): Promise<User | null> => {
+  const signInWithGoogle = async (portal?: LoginPortal): Promise<User | null> => {
     if (signingIn) return null;
+    if (portal) setLoginPortal(portal);
     setSigningIn(true);
     setAuthError(null);
     try {
@@ -91,8 +119,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithRedirectFallback = async (): Promise<void> => {
+  const signInWithRedirectFallback = async (portal?: LoginPortal): Promise<void> => {
     if (signingIn) return;
+    if (portal) setLoginPortal(portal);
     setSigningIn(true);
     setAuthError(null);
     try {
@@ -103,6 +132,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSigningIn(false);
       throw new Error(friendly);
     }
+  };
+
+  const refreshProfile = async () => {
+    if (!firebaseUser) return;
+    const syncedProfile = await ensureUserProfile(firebaseUser);
+    setProfile(syncedProfile);
   };
 
   const logout = async () => {
@@ -140,11 +175,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authReady,
         signingIn,
         authError,
+        loginPortal,
         isEngineerOrAdmin,
         isAdmin,
+        setLoginPortal,
         clearAuthError,
         signInWithGoogle,
         signInWithRedirectFallback,
+        refreshProfile,
         logout,
         updateProfile,
       }}

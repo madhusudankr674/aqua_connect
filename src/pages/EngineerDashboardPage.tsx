@@ -47,11 +47,9 @@ export function EngineerDashboardPage() {
     firebaseUser,
     profile,
     authReady,
-    signingIn,
     authError,
     isEngineerOrAdmin,
     isAdmin,
-    signInWithGoogle,
   } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'complaints' | 'awareness'>('complaints');
@@ -255,14 +253,14 @@ export function EngineerDashboardPage() {
             <Lock className="h-6 w-6" aria-hidden="true" />
           </div>
           <h1 className="font-display text-2xl font-bold text-slate-900">
-            Authorized Engineer &amp; Admin Access Only
+            Authorized Engineer &amp; PDO Access Only
           </h1>
           <p className="text-sm leading-relaxed text-slate-600">
             {firebaseUser
               ? `Signed in as ${firebaseUser.email} (Role: ${
                   profile?.role || 'citizen'
-                }). This dashboard is restricted to authorized local water-supply and PHED engineers.`
-              : 'Please sign in with an authorized Engineer or Administrator Google account to view citizen PII, update complaint workflows, and manage educational articles.'}
+                }). This dashboard is restricted to authorized local water-supply engineers, PHED officials, and PDOs.`
+              : 'Sign in through the Engineer Login or PDO Login portal to view citizen reports, update complaint workflows, and manage educational articles.'}
           </p>
           {authError && (
             <p
@@ -274,21 +272,35 @@ export function EngineerDashboardPage() {
           )}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             {!firebaseUser ? (
-              <button
-                type="button"
-                disabled={signingIn}
-                onClick={() => void signInWithGoogle().catch(() => undefined)}
-                className="min-h-[44px] rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 cursor-pointer"
-              >
-                {signingIn ? 'Signing in...' : 'Sign in with Google'}
-              </button>
+              <>
+                <Link
+                  to="/login?portal=engineer"
+                  className="min-h-[44px] inline-flex items-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800"
+                >
+                  Engineer Login
+                </Link>
+                <Link
+                  to="/login?portal=pdo"
+                  className="min-h-[44px] inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                >
+                  PDO Login
+                </Link>
+              </>
             ) : (
-              <Link
-                to="/track"
-                className="min-h-[44px] inline-flex items-center rounded-lg bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800"
-              >
-                Go to Citizen Complaint Tracking
-              </Link>
+              <>
+                <Link
+                  to="/login?portal=engineer"
+                  className="min-h-[44px] inline-flex items-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800"
+                >
+                  Open Engineer / PDO Login
+                </Link>
+                <Link
+                  to="/track"
+                  className="min-h-[44px] inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  Go to Citizen Complaint Tracking
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -302,10 +314,10 @@ export function EngineerDashboardPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-6">
         <div>
           <p className="text-xs font-semibold text-sky-800">
-            Authorized Official · {profile?.name || firebaseUser.email} ({profile?.role})
+            Authorized Official · {profile?.name || firebaseUser.email} ({profile?.role === 'admin' ? 'PDO / Admin' : 'Engineer'})
           </p>
           <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Engineer &amp; Panchayat Operations Dashboard
+            Engineer &amp; PDO Operations Dashboard
           </h1>
         </div>
 

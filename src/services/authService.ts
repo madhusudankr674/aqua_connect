@@ -7,8 +7,11 @@ import {
   type User,
 } from 'firebase/auth';
 import {
+  collection,
+  deleteDoc,
   doc,
   getDoc,
+  getDocs,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -21,7 +24,7 @@ import {
   handleFirestoreError,
   OperationType,
 } from '../config/firebase';
-import type { UserProfile, UserRole } from '../types/user';
+import type { RoleMarkerRecord, UserProfile, UserRole } from '../types/user';
 
 const inFlightProfiles = new Map<string, Promise<UserProfile>>();
 
@@ -48,9 +51,9 @@ export function formatAuthError(err: unknown): string {
 
   switch (code) {
     case 'auth/popup-closed-by-user':
-      return 'The Google sign-in window was closed before completing login. Click "Continue with Google" to try again.';
+      return 'The Google sign-in window was closed before completing login. Click the Sign In button to try again.';
     case 'auth/cancelled-popup-request':
-      return 'Another sign-in popup was already open. Please wait a moment and click "Continue with Google" once.';
+      return 'Another sign-in popup was already open. Please wait a moment and click Sign In once.';
     case 'auth/popup-blocked':
       return isEmbeddedIframe()
         ? 'Your browser blocked the Google sign-in popup inside this embedded view. Allow popups for this site or open Aqua Connect in a new browser tab to sign in.'
@@ -280,5 +283,91 @@ export async function updateUserProfileDetails(
     });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, userPath);
+  }
+}
+
+export async function listAuthorizedOfficials(): Promise<RoleMarkerRecord[]> {
+  const results: RoleMarkerRecord[] = [];
+  try {
+    const [engSnap, adminSnap] = await Promise.all([
+      getDocs(collection(db, 'engineers')),
+      getDocs(collection(db, 'admins')),
+    ]);
+    engSnap.docs.forEach((d) => {
+      const data = d.data() as { uid: string; email: string; assignedAt: unknown };
+      results.push({ ...data, roleType: 'engineer' });
+    });
+    adminSnap.docs.forEach((d) => {
+      const data = d.data() as { uid: string; email: string; assignedAt: unknown };
+      results.push({ ...data, roleType: 'admin' });
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, 'engineers');
+  }
+  return results;
+}
+
+export async function authorizeOfficial(params: {
+  uid: string;
+  email: string;
+  roleType: 'engineer' | 'admin';
+}): Promise<void> {
+  const cleanUid = params.uid.trim();
+  const cleanEmail = params.email.trim().toLowerCase();
+
+  if (!/^[a-zA-Z0-9_-]{1,128}$/.test(cleanUid)) {
+    throw new Error('Enter a valid User UID (letters, numbers, hyphens, underscores only).');
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) || cleanEmail.length > 150) {
+    throw new Error('Enter a valid official email address.');
+  }
+
+  const colName = params.roleType === 'admin' ? 'admins' : 'engineers';
+  const markerPath = `${colName}/${cleanUid}`;
+
+  try {
+    await setDoc(doc(db, colName, cleanUid), {
+      uid: cleanUid,
+      email: cleanEmail,
+      assignedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, markerPath);
+  }
+
+  // Sync users/{uid}.role if their profile document already exists
+  try {
+    const userRef = doc(db, 'users', cleanUid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      await updateDoc(userRef, { role: params.roleType });
+    }
+  } catch {
+    // Non-blocking if profile document hasn't been created yet
+  }
+}
+
+export async function revokeOfficial(params: {
+  uid: string;
+  roleType: 'engineer' | 'admin';
+}): Promise<void> {
+  const cleanUid = params.uid.trim();
+  const colName = params.roleType === 'admin' ? 'admins' : 'engineers';
+  const markerPath = `${colName}/${cleanUid}`;
+
+  try {
+    await deleteDoc(doc(db, colName, cleanUid));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, markerPath);
+  }
+
+  try {
+    const userRef = doc(db, 'users', cleanUid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      await updateDoc(userRef, { role: 'citizen' });
+    }
+  } catch {
+    // Non-blocking
   }
 }
