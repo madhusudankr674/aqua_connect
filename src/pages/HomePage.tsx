@@ -11,21 +11,21 @@ import {
 import { ScientificDisclaimer } from '../components/ScientificDisclaimer';
 import { useLanguage } from '../contexts/LanguageContext';
 import { CURATED_AWARENESS_ARTICLES } from '../services/awarenessService';
-import HERO_IMG from '../assets/images/hero_community_water_1794739093987.jpg';
+import HERO_IMG from '../assets/images/hero_community_water_1794742569512.jpg';
 import STORAGE_IMG from '../assets/images/awareness_safe_storage_1794739093290.jpg';
 import BOILING_IMG from '../assets/images/awareness_boiling_water_1794739094396.jpg';
 import TOWER_IMG from '../assets/images/panchayat_water_tower_1794739095111.jpg';
 
 const DEMO_STATS = [
   {
-    label: 'Pilot Wards Covered',
-    value: 'Ward 2 & 4',
-    detail: 'Herooru Grama Panchayat',
+    label: 'Active Wards Supported',
+    value: 'All Wards',
+    detail: 'Local water supply zones',
   },
   {
     label: 'Demo Baseline Reports Logged',
     value: '42',
-    detail: 'Illustrative pilot baseline',
+    detail: 'Illustrative community baseline',
   },
   {
     label: 'Demo Resolved Observations',
@@ -35,7 +35,7 @@ const DEMO_STATS = [
   {
     label: 'PHED Lab Referrals (Demo)',
     value: '06',
-    detail: 'Sent to Tumakuru water lab',
+    detail: 'Sent to authorized water lab',
   },
 ];
 
@@ -82,7 +82,7 @@ export function HomePage() {
               <div className="relative h-72 sm:h-96 lg:h-full min-h-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-sky-950">
                 <img
                   src={HERO_IMG}
-                  alt="Community drinking water tap stand in Tumakuru district, Karnataka"
+                  alt="Community drinking water tap stand"
                   referrerPolicy="no-referrer"
                   className="h-full w-full object-cover"
                 />
@@ -242,7 +242,7 @@ export function HomePage() {
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 h-72 lg:h-80">
               <img
                 src={TOWER_IMG}
-                alt="Elevated village drinking water overhead tank in Karnataka"
+                alt="Elevated community drinking water overhead tank"
                 referrerPolicy="no-referrer"
                 className="h-full w-full object-cover"
               />
@@ -252,7 +252,7 @@ export function HomePage() {
           <div className="lg:col-span-7 space-y-5">
             <div className="flex items-center gap-2 text-xs font-semibold text-sky-800">
               <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Mahatma Gandhi Herooru Grama Panchayat · Pilot Wards 2 &amp; 4</span>
+              <span>Community Water Governance · All Wards &amp; Localities</span>
             </div>
             <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
               {t.home.objectivesTitle}

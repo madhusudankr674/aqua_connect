@@ -18,8 +18,8 @@ export function Footer() {
             </div>
             <p className="text-sm font-medium text-sky-300">{t.tagline}</p>
             <p className="text-xs leading-relaxed text-slate-400">
-              Community Water Reporting &amp; Awareness Portal piloted for Mahatma Gandhi Herooru
-              Grama Panchayat (Wards 2 &amp; 4), Tumakuru District, Karnataka.
+              Community Water Reporting &amp; Awareness Portal supporting citizens, local water
+              bodies, and public health engineering teams across wards and localities.
             </p>
           </div>
 
@@ -68,8 +68,8 @@ export function Footer() {
               Engineering · VTU 2025 Scheme · Semester III · Course 1BCP308 · Team ILLUMINATORS
             </p>
             <p className="text-xs leading-relaxed text-slate-400">
-              Panchayat Office Contact: Herooru Grama Panchayat Water Supply Desk, Tumakuru
-              Taluk &amp; District, Karnataka.
+              Water Supply Support: Contact your local Grama Panchayat, Municipal Water Desk, or
+              authorized PHED Water-Supply Engineer.
             </p>
           </div>
         </div>
@@ -79,7 +79,7 @@ export function Footer() {
             Aqua Connect records citizen observations only; formal laboratory testing is required to
             certify drinking water safety.
           </p>
-          <p className="whitespace-nowrap">Team ILLUMINATORS · CIT Tumakuru</p>
+          <p className="whitespace-nowrap">Team ILLUMINATORS · CIT</p>
         </div>
       </div>
     </footer>

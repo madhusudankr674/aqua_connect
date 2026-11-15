@@ -46,8 +46,8 @@ export function ReportIssuePage() {
 
   const [citizenName, setCitizenName] = useState('');
   const [mobile, setMobile] = useState('');
-  const [ward, setWard] = useState<ComplaintWard>('Ward 2');
-  const [locality, setLocality] = useState('Herooru');
+  const [ward, setWard] = useState<ComplaintWard>('Ward 1');
+  const [locality, setLocality] = useState('');
   const [category, setCategory] = useState<ComplaintCategory>('Muddy or cloudy water');
   const [observationDate, setObservationDate] = useState(getLocalDatetimeDefault);
   const [continuingIssue, setContinuingIssue] = useState(true);
@@ -70,8 +70,8 @@ export function ReportIssuePage() {
     if (profile) {
       setCitizenName((prev) => prev || profile.name || '');
       setMobile((prev) => prev || profile.mobile || '');
-      if (profile.locality && profile.locality !== 'Herooru Grama Panchayat') {
-        setLocality((prev) => (prev === 'Herooru' ? profile.locality : prev));
+      if (profile.locality) {
+        setLocality((prev) => prev || profile.locality);
       }
     }
   }, [profile]);
@@ -329,7 +329,7 @@ export function ReportIssuePage() {
               >
                 {VALID_WARDS.map((w) => (
                   <option key={w} value={w}>
-                    {w === 'Ward 2' || w === 'Ward 4' ? `${w} (Pilot Ward)` : w}
+                    {w}
                   </option>
                 ))}
               </select>
@@ -347,7 +347,7 @@ export function ReportIssuePage() {
                 maxLength={120}
                 value={locality}
                 onChange={(e) => setLocality(e.target.value)}
-                placeholder="e.g. Herooru Main Road"
+                placeholder="e.g. Main Road, Ward Locality, or Village Name"
                 className="w-full min-h-[44px] rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:border-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-600/20"
               />
               {errors.locality && <p className="mt-1 text-xs text-rose-700">{errors.locality}</p>}

@@ -107,7 +107,7 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
       account: 'Account',
     },
     hero: {
-      panchayatLabel: 'Mahatma Gandhi Herooru Grama Panchayat · Tumakuru District · Pilot Wards 2 & 4',
+      panchayatLabel: 'Community Water Reporting & Awareness Portal · All Wards & Localities',
       heading: 'Safe Drinking Water Starts With Your Voice.',
       description:
         'Report water-related issues, track complaint progress and learn safe-water practices through one connected community platform.',
@@ -131,7 +131,7 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
         'Every status update is logged with timestamps and engineer remarks so citizens can track progress publicly using their unique Complaint ID.',
       statsTitle: 'Community Reporting Snapshot',
       statsDemoNote:
-        'Demo Pilot Baseline — Representative pilot figures shown until live field reports accumulate in Firestore.',
+        'Demo Community Baseline — Representative baseline figures shown until live field reports accumulate in Firestore.',
       awarenessTitle: 'Safe-Water Awareness Highlights',
       viewAllAwareness: 'Open Awareness Centre',
       objectivesTitle: 'Project Objectives & Civic Impact',
@@ -139,7 +139,7 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
     report: {
       title: 'Report a Drinking-Water Issue',
       subtitle:
-        'Submit structured citizen observations for Mahatma Gandhi Herooru Grama Panchayat (Pilot Wards 2 & 4).',
+        'Submit structured citizen water observations for your ward, village, or locality.',
       signInPromptTitle: 'Verify Your Identity Before Submitting',
       signInPromptDesc:
         'Sign in with Google so your complaint is linked securely to your citizen account and protected against unauthorized tampering.',
@@ -168,7 +168,7 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
       submittingBtn: 'Submitting Report...',
       successTitle: 'Complaint Registered Successfully',
       successSubtitle:
-        'Your water observation has been recorded in the Herooru Grama Panchayat registry. Save your Complaint ID below to track engineer action.',
+        'Your water observation has been recorded in the community registry. Save your Complaint ID below to track engineer action.',
       complaintIdLabel: 'Unique Complaint ID',
       verifyHintLabel: 'Verification Digits (Last 4 of Mobile)',
       trackNowBtn: 'Track This Complaint',
@@ -224,7 +224,7 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
       account: 'ಖಾತೆ',
     },
     hero: {
-      panchayatLabel: 'ಮಹಾತ್ಮ ಗಾಂಧಿ ಹೆರೂರು ಗ್ರಾಮ ಪಂಚಾಯತಿ · ತುಮಕೂರು ಜಿಲ್ಲೆ · ಪ್ರಾಯೋಗಿಕ ವಾರ್ಡ್ 2 ಮತ್ತು 4',
+      panchayatLabel: 'ಸಮುದಾಯ ಕುಡಿಯುವ ನೀರು ವರದಿ ಮತ್ತು ಅರಿವು ವೇದಿಕೆ · ಎಲ್ಲಾ ವಾರ್ಡ್‌ಗಳು ಮತ್ತು ಬಡಾವಣೆಗಳು',
       heading: 'ಸುರಕ್ಷಿತ ಕುಡಿಯುವ ನೀರು ನಿಮ್ಮ ಧ್ವನಿಯಿಂದ ಪ್ರಾರಂಭವಾಗುತ್ತದೆ.',
       description:
         'ಒಂದೇ ಸಮುದಾಯ ವೇದಿಕೆಯ ಮೂಲಕ ಕುಡಿಯುವ ನೀರಿನ ಸಮಸ್ಯೆಗಳನ್ನು ವರದಿ ಮಾಡಿ, ದೂರುಗಳ ಪ್ರಗತಿಯನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಸುರಕ್ಷಿತ ನೀರಿನ ಅಭ್ಯಾಸಗಳನ್ನು ತಿಳಿಯಿರಿ.',
@@ -256,7 +256,7 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
     report: {
       title: 'ಕುಡಿಯುವ ನೀರಿನ ಸಮಸ್ಯೆ ವರದಿ ಮಾಡಿ',
       subtitle:
-        'ಮಹಾತ್ಮ ಗಾಂಧಿ ಹೆರೂರು ಗ್ರಾಮ ಪಂಚಾಯತಿ (ಪ್ರಾಯೋಗಿಕ ವಾರ್ಡ್ 2 ಮತ್ತು 4) ನಾಗರಿಕ ಅವಲೋಕನ ಫಾರ್ಮ್.',
+        'ನಿಮ್ಮ ವಾರ್ಡ್, ಗ್ರಾಮ ಅಥವಾ ಬಡಾವಣೆಗೆ ನಾಗರಿಕ ನೀರಿನ ಅವಲೋಕನಗಳನ್ನು ಸಲ್ಲಿಸಿ.',
       signInPromptTitle: 'ದೂರು ಸಲ್ಲಿಸುವ ಮೊದಲು ಗುರುತನ್ನು ದೃಢೀಕರಿಸಿ',
       signInPromptDesc:
         'ನಿಮ್ಮ ದೂರನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ದಾಖಲಿಸಲು ಮತ್ತು ಅನಧಿಕೃತ ಬದಲಾವಣೆಗಳನ್ನು ತಡೆಯಲು ಗೂಗಲ್ ಮೂಲಕ ಸೈನ್ ಇನ್ ಮಾಡಿ.',
@@ -285,7 +285,7 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
       submittingBtn: 'ಸಲ್ಲಿಸಲಾಗುತ್ತಿದೆ...',
       successTitle: 'ದೂರು ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಾಗಿದೆ',
       successSubtitle:
-        'ನಿಮ್ಮ ನೀರಿನ ಅವಲೋಕನವು ಹೆರೂರು ಗ್ರಾಮ ಪಂಚಾಯತಿ ದಾಖಲೆಯಲ್ಲಿ ಸೇರ್ಪಡೆಯಾಗಿದೆ. ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಲು ಕೆಳಗಿನ ದೂರು ಸಂಖ್ಯೆಯನ್ನು ಉಳಿಸಿ.',
+        'ನಿಮ್ಮ ನೀರಿನ ಅವಲೋಕನವು ಸಮುದಾಯ ದಾಖಲೆಯಲ್ಲಿ ಸೇರ್ಪಡೆಯಾಗಿದೆ. ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಲು ಕೆಳಗಿನ ದೂರು ಸಂಖ್ಯೆಯನ್ನು ಉಳಿಸಿ.',
       complaintIdLabel: 'ವಿಶಿಷ್ಟ ದೂರು ಸಂಖ್ಯೆ',
       verifyHintLabel: 'ಪರಿಶೀಲನಾ ಅಂಕಿಗಳು (ಮೊಬೈಲ್ ಕೊನೆಯ 4)',
       trackNowBtn: 'ಈ ದೂರನ್ನು ಪರಿಶೀಲಿಸಿ',

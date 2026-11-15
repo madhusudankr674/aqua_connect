@@ -26,7 +26,7 @@ export function LoginPage() {
     if (profile) {
       setName(profile.name || '');
       setMobile(profile.mobile || '');
-      setLocality(profile.locality || 'Herooru Grama Panchayat');
+      setLocality(profile.locality || '');
     }
   }, [profile]);
 

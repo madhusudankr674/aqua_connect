@@ -14,7 +14,7 @@ import {
   DEMO_MAP_ID,
   GMP_ATTRIBUTION_IDS,
   GOOGLE_MAPS_API_KEY,
-  HEROORU_DEFAULT_CENTER,
+  DEFAULT_MAP_CENTER,
 } from '../config/maps';
 import { getStatusStyle } from '../services/workflow';
 import type { Complaint } from '../types/complaint';
@@ -103,7 +103,7 @@ export function EngineerComplaintsMap({
   const center =
     geocoded.length > 0 && geocoded[0].latitude !== null && geocoded[0].longitude !== null
       ? { lat: geocoded[0].latitude, lng: geocoded[0].longitude }
-      : HEROORU_DEFAULT_CENTER;
+      : DEFAULT_MAP_CENTER;
 
   if (
     !GOOGLE_MAPS_API_KEY ||
@@ -133,7 +133,7 @@ export function EngineerComplaintsMap({
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
         <span>
           Showing <strong className="tabular-nums text-slate-900">{geocoded.length}</strong> geocoded
-          complaints across Herooru Grama Panchayat
+          complaints across all wards
         </span>
         <span>Click any pin to inspect complaint details</span>
       </div>
@@ -141,7 +141,7 @@ export function EngineerComplaintsMap({
         <GoogleMap
           mapId={DEMO_MAP_ID}
           defaultCenter={center}
-          defaultZoom={13}
+          defaultZoom={geocoded.length > 0 ? 13 : 5}
           gestureHandling="greedy"
           internalUsageAttributionIds={GMP_ATTRIBUTION_IDS}
           style={{ width: '100%', height: '100%' }}

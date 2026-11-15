@@ -72,7 +72,7 @@ export function WaterAwarenessPage() {
           <p>
             All educational guidance published on Aqua Connect must be reviewed by the local PHED
             or Grama Panchayat water-supply engineer before being treated as locally approved
-            guidance for Herooru Grama Panchayat.
+            guidance for your community.
           </p>
         </div>
       </div>

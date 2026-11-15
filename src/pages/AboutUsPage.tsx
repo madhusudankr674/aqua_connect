@@ -17,7 +17,7 @@ export function AboutUsPage() {
             Aqua Connect is a community drinking-water observation reporting and safe-water
             awareness portal designed by <strong>Team ILLUMINATORS</strong> from the Department of
             Computer Science and Engineering at{' '}
-            <strong>Channabasaveshwara Institute of Technology (CIT)</strong>, Gubbi, Tumakuru.
+            <strong>Channabasaveshwara Institute of Technology (CIT)</strong>.
           </p>
           <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
             The system addresses the lack of traceability in informal complaint channels such as
@@ -30,7 +30,7 @@ export function AboutUsPage() {
           <div className="h-64 sm:h-72 overflow-hidden rounded-2xl border border-slate-200 bg-slate-200">
             <img
               src={TOWER_IMG}
-              alt="Overhead community drinking water tank in Tumakuru rural Grama Panchayat"
+              alt="Elevated community drinking water overhead tank"
               referrerPolicy="no-referrer"
               className="h-full w-full object-cover"
             />
@@ -54,11 +54,11 @@ export function AboutUsPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-2.5">
           <MapPin className="h-6 w-6 text-sky-700" aria-hidden="true" />
           <h2 className="font-display text-base font-bold text-slate-900">
-            Pilot Grama Panchayat
+            Universal Community Scope
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Mahatma Gandhi Herooru Grama Panchayat, Tumakuru District, Karnataka · Initial Pilot
-            Wards: <strong>Ward 2</strong> and <strong>Ward 4</strong>.
+            Designed for any Grama Panchayat, municipal ward, or local water supply
+            network—adaptable across <strong>all wards and localities</strong>.
           </p>
         </div>
 

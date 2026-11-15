@@ -80,7 +80,7 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
     mobile: '',
     email: (user.email || 'user@example.com').slice(0, 150),
     role: 'citizen',
-    locality: 'Herooru Grama Panchayat',
+    locality: '',
     createdAt: serverTimestamp(),
   };
 

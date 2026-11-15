@@ -13,7 +13,7 @@ import {
   DEMO_MAP_ID,
   GMP_ATTRIBUTION_IDS,
   GOOGLE_MAPS_API_KEY,
-  HEROORU_DEFAULT_CENTER,
+  DEFAULT_MAP_CENTER,
 } from '../config/maps';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -136,19 +136,19 @@ export function MapLocationPicker({
             Interactive map unavailable — manual landmark and coordinate entry active
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            Default area: Mahatma Gandhi Herooru Grama Panchayat (13.3392, 77.1139)
+            Default view centered; click the map or use GPS to set your exact location
           </p>
         </div>
       ) : !isLoaded ? (
         <div className="flex h-64 w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-sm text-slate-500">
-          Loading Herooru Grama Panchayat map...
+          Loading interactive map...
         </div>
       ) : (
         <div className="h-72 w-full overflow-hidden rounded-xl border border-slate-200">
           <GoogleMap
             mapId={DEMO_MAP_ID}
-            defaultCenter={selectedPosition || HEROORU_DEFAULT_CENTER}
-            defaultZoom={14}
+            defaultCenter={selectedPosition || DEFAULT_MAP_CENTER}
+            defaultZoom={selectedPosition ? 15 : 5}
             gestureHandling="greedy"
             onClick={handleMapClick}
             internalUsageAttributionIds={GMP_ATTRIBUTION_IDS}
@@ -188,10 +188,10 @@ export function MapLocationPicker({
                 onChange(null, longitude);
               } else {
                 const parsed = Number(val);
-                if (!Number.isNaN(parsed)) onChange(parsed, longitude ?? HEROORU_DEFAULT_CENTER.lng);
+                if (!Number.isNaN(parsed)) onChange(parsed, longitude ?? DEFAULT_MAP_CENTER.lng);
               }
             }}
-            placeholder="13.339200"
+            placeholder="20.593700"
             className="w-full min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm tabular-nums text-slate-900 focus:border-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-600/20"
           />
         </div>
@@ -212,10 +212,10 @@ export function MapLocationPicker({
                 onChange(latitude, null);
               } else {
                 const parsed = Number(val);
-                if (!Number.isNaN(parsed)) onChange(latitude ?? HEROORU_DEFAULT_CENTER.lat, parsed);
+                if (!Number.isNaN(parsed)) onChange(latitude ?? DEFAULT_MAP_CENTER.lat, parsed);
               }
             }}
-            placeholder="77.113900"
+            placeholder="78.962900"
             className="w-full min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm tabular-nums text-slate-900 focus:border-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-600/20"
           />
         </div>

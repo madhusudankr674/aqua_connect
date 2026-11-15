@@ -253,7 +253,7 @@ export function EngineerDashboardPage() {
             {firebaseUser
               ? `Signed in as ${firebaseUser.email} (Role: ${
                   profile?.role || 'citizen'
-                }). This dashboard is restricted to authorized Herooru Grama Panchayat and PHED water-supply engineers.`
+                }). This dashboard is restricted to authorized local water-supply and PHED engineers.`
               : 'Please sign in with an authorized Engineer or Administrator Google account to view citizen PII, update complaint workflows, and manage educational articles.'}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -341,7 +341,7 @@ export function EngineerDashboardPage() {
                   category: AWARENESS_CATEGORIES[0],
                   content: '',
                   contentKn: '',
-                  sourceName: 'Local PHED & Herooru Grama Panchayat',
+                  sourceName: 'Local PHED & Water Supply Authority',
                   sourceUrl: 'https://jaljeevanmission.gov.in/',
                   lastReviewedAt: new Date().toISOString().slice(0, 10),
                   approvedByPhed: true,
