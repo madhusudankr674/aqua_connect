@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, LogIn, LogOut, Shield, UserCheck } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Copy,
+  LogIn,
+  LogOut,
+  Shield,
+  UserCheck,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { formatAuthError } from '../services/authService';
 import { sanitizeMobile } from '../services/validation';
 
 export function LoginPage() {
@@ -9,8 +18,12 @@ export function LoginPage() {
     firebaseUser,
     profile,
     authReady,
+    signingIn,
+    authError,
     isEngineerOrAdmin,
+    clearAuthError,
     signInWithGoogle,
+    signInWithRedirectFallback,
     logout,
     updateProfile,
   } = useAuth();
@@ -21,36 +34,78 @@ export function LoginPage() {
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [copiedDomain, setCopiedDomain] = useState(false);
 
   useEffect(() => {
     if (profile) {
-      setName(profile.name || '');
+      setName(profile.name || firebaseUser?.displayName || '');
       setMobile(profile.mobile || '');
       setLocality(profile.locality || '');
+    } else if (firebaseUser) {
+      setName(firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '');
     }
-  }, [profile]);
+  }, [profile, firebaseUser]);
+
+  const activeError = errorMsg || authError;
+  const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isUnauthorizedDomain = Boolean(
+    activeError && activeError.includes('Authorized domains')
+  );
 
   const handleLogin = async () => {
     setErrorMsg(null);
+    clearAuthError();
     try {
       await signInWithGoogle();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Sign-in failed.');
+      setErrorMsg(formatAuthError(err));
+    }
+  };
+
+  const handleRedirectLogin = async () => {
+    setErrorMsg(null);
+    clearAuthError();
+    try {
+      await signInWithRedirectFallback();
+    } catch (err) {
+      setErrorMsg(formatAuthError(err));
     }
   };
 
   const handleSaveProfile = async (ev: React.FormEvent) => {
     ev.preventDefault();
-    setSaving(true);
     setSavedMsg(null);
     setErrorMsg(null);
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setErrorMsg('Please enter your display name before saving.');
+      return;
+    }
+
+    setSaving(true);
     try {
-      await updateProfile({ name, mobile, locality });
+      await updateProfile({
+        name: trimmedName,
+        mobile,
+        locality,
+      });
       setSavedMsg('Profile details saved.');
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Could not update profile.');
+      setErrorMsg(formatAuthError(err));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCopyHost = async () => {
+    if (!currentHost || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(currentHost);
+      setCopiedDomain(true);
+      setTimeout(() => setCopiedDomain(false), 2000);
+    } catch {
+      // Clipboard blocked
     }
   };
 
@@ -77,26 +132,71 @@ export function LoginPage() {
               Sign in with Verified Google Account
             </h2>
             <p className="text-sm text-slate-600">
-              All newly signed-in residents receive a Citizen profile. Authorized Grama Panchayat
+              All newly signed-in residents receive a Citizen profile. Authorized local water-supply
               and PHED engineers receive Engineer/Admin access based on verified server-side role
               records.
             </p>
           </div>
 
-          {errorMsg && (
-            <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-              {errorMsg}
-            </p>
+          {activeError && (
+            <div
+              role="alert"
+              className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 space-y-2.5"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="h-5 w-5 shrink-0 text-rose-700 mt-0.5" aria-hidden="true" />
+                  <span>{activeError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg(null);
+                    clearAuthError();
+                  }}
+                  className="text-xs font-semibold text-rose-700 underline hover:text-rose-900 shrink-0 cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+              {isUnauthorizedDomain && currentHost && (
+                <div className="flex flex-wrap items-center gap-2 pl-7">
+                  <code className="rounded border border-rose-200 bg-white px-2.5 py-1 font-mono text-xs text-slate-900">
+                    {currentHost}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyHost()}
+                    className="inline-flex items-center gap-1 rounded border border-rose-300 bg-white px-2.5 py-1 text-xs font-semibold text-rose-900 hover:bg-rose-100 cursor-pointer"
+                  >
+                    <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{copiedDomain ? 'Copied' : 'Copy domain'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => void handleLogin()}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2.5 rounded-lg bg-sky-700 px-6 py-3 text-sm font-semibold text-white hover:bg-sky-800 cursor-pointer"
-          >
-            <LogIn className="h-4 w-4" aria-hidden="true" />
-            <span>Continue with Google</span>
-          </button>
+          <div className="flex flex-col items-start gap-3">
+            <button
+              type="button"
+              disabled={signingIn}
+              onClick={() => void handleLogin()}
+              className="inline-flex min-h-[48px] items-center justify-center gap-2.5 rounded-lg bg-sky-700 px-6 py-3 text-sm font-semibold text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            >
+              <LogIn className="h-4 w-4" aria-hidden="true" />
+              <span>{signingIn ? 'Signing in with Google...' : 'Continue with Google'}</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={signingIn}
+              onClick={() => void handleRedirectLogin()}
+              className="text-xs font-medium text-sky-700 underline hover:text-sky-900 disabled:opacity-50 cursor-pointer"
+            >
+              Having trouble with popups? Sign in using page redirect instead
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -106,7 +206,7 @@ export function LoginPage() {
               <div className="space-y-1">
                 <p className="text-xs font-medium text-slate-500">Signed-in Account</p>
                 <h2 className="font-display text-xl font-bold text-slate-900">
-                  {profile?.name || firebaseUser.displayName}
+                  {profile?.name || firebaseUser.displayName || 'Community Member'}
                 </h2>
                 <p className="text-sm text-slate-600">{firebaseUser.email}</p>
               </div>
@@ -165,7 +265,7 @@ export function LoginPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="prof-name" className="block text-xs font-medium text-slate-700 mb-1">
-                  Display Name
+                  Display Name *
                 </label>
                 <input
                   id="prof-name"
@@ -201,6 +301,7 @@ export function LoginPage() {
                   maxLength={120}
                   value={locality}
                   onChange={(e) => setLocality(e.target.value)}
+                  placeholder="e.g. Main Road, Ward Locality, or Village Name"
                   className="w-full min-h-[44px] rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
                 />
               </div>
@@ -212,7 +313,11 @@ export function LoginPage() {
                 <span>{savedMsg}</span>
               </p>
             )}
-            {errorMsg && <p className="text-xs text-rose-700">{errorMsg}</p>}
+            {errorMsg && (
+              <p role="alert" className="text-xs font-medium text-rose-700">
+                {errorMsg}
+              </p>
+            )}
 
             <button
               type="submit"

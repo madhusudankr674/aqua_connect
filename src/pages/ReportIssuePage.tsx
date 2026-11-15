@@ -42,7 +42,7 @@ function getLocalDatetimeDefault(): string {
 
 export function ReportIssuePage() {
   const { t } = useLanguage();
-  const { firebaseUser, profile, signInWithGoogle } = useAuth();
+  const { firebaseUser, profile, signingIn, authError, signInWithGoogle } = useAuth();
 
   const [citizenName, setCitizenName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -252,21 +252,29 @@ export function ReportIssuePage() {
       <ScientificDisclaimer compact />
 
       {!firebaseUser && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-display text-base font-bold text-slate-900">
-              {t.report.signInPromptTitle}
-            </h2>
-            <p className="mt-1 text-sm text-slate-700">{t.report.signInPromptDesc}</p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 space-y-3">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-base font-bold text-slate-900">
+                {t.report.signInPromptTitle}
+              </h2>
+              <p className="mt-1 text-sm text-slate-700">{t.report.signInPromptDesc}</p>
+            </div>
+            <button
+              type="button"
+              disabled={signingIn}
+              onClick={() => void signInWithGoogle().catch(() => undefined)}
+              className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 cursor-pointer whitespace-nowrap"
+            >
+              <LogIn className="h-4 w-4" aria-hidden="true" />
+              <span>{signingIn ? 'Signing in...' : t.report.signInBtn}</span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => void signInWithGoogle()}
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 cursor-pointer whitespace-nowrap"
-          >
-            <LogIn className="h-4 w-4" aria-hidden="true" />
-            <span>{t.report.signInBtn}</span>
-          </button>
+          {authError && (
+            <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+              {authError}
+            </p>
+          )}
         </div>
       )}
 

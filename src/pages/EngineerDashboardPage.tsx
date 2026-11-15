@@ -43,8 +43,16 @@ import type {
 
 export function EngineerDashboardPage() {
   const { t } = useLanguage();
-  const { firebaseUser, profile, authReady, isEngineerOrAdmin, isAdmin, signInWithGoogle } =
-    useAuth();
+  const {
+    firebaseUser,
+    profile,
+    authReady,
+    signingIn,
+    authError,
+    isEngineerOrAdmin,
+    isAdmin,
+    signInWithGoogle,
+  } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'complaints' | 'awareness'>('complaints');
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -256,14 +264,23 @@ export function EngineerDashboardPage() {
                 }). This dashboard is restricted to authorized local water-supply and PHED engineers.`
               : 'Please sign in with an authorized Engineer or Administrator Google account to view citizen PII, update complaint workflows, and manage educational articles.'}
           </p>
+          {authError && (
+            <p
+              role="alert"
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-900 text-left"
+            >
+              {authError}
+            </p>
+          )}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             {!firebaseUser ? (
               <button
                 type="button"
-                onClick={() => void signInWithGoogle()}
-                className="min-h-[44px] rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 cursor-pointer"
+                disabled={signingIn}
+                onClick={() => void signInWithGoogle().catch(() => undefined)}
+                className="min-h-[44px] rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 cursor-pointer"
               >
-                Sign in with Google
+                {signingIn ? 'Signing in...' : 'Sign in with Google'}
               </button>
             ) : (
               <Link
