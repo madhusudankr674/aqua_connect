@@ -1,0 +1,398 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerified() && request.auth.token.email == 'madhusudankr06@gmail.com';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isBootstrappedAdmin() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isEngineerOrAdmin() {
+      return isSignedIn() && (
+        isAdmin() ||
+        exists(/databases/$(database)/documents/engineers/$(request.auth.uid))
+      );
+    }
+
+    // Validation helpers
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'name', 'mobile', 'email', 'role', 'locality', 'createdAt']) &&
+        isValidId(data.uid) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        (!('mobile' in data) || (data.mobile is string && data.mobile.size() <= 15)) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 150 &&
+        data.role in ['citizen', 'engineer', 'admin'] &&
+        (!('locality' in data) || (data.locality is string && data.locality.size() <= 120)) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidRoleMarker(data) {
+      return data.keys().hasAll(['uid', 'email', 'assignedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'assignedAt']) &&
+        isValidId(data.uid) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 150 &&
+        data.assignedAt is timestamp;
+    }
+
+    function isValidWard(ward) {
+      return ward in ['Ward 1', 'Ward 2', 'Ward 3', 'Ward 4', 'Ward 5', 'Other'];
+    }
+
+    function isValidCategory(category) {
+      return category in [
+        'Muddy or cloudy water',
+        'Unusual colour',
+        'Unusual smell',
+        'Unusual taste',
+        'Visible particles',
+        'Pipeline leakage',
+        'Irregular water supply',
+        'Low water pressure',
+        'Other'
+      ];
+    }
+
+    function isValidStatus(status) {
+      return status in [
+        'Submitted',
+        'Acknowledged',
+        'In Progress',
+        'Referred for Laboratory Testing',
+        'Resolved',
+        'Closed'
+      ];
+    }
+
+    function isValidImageUrls(urls) {
+      return urls is list &&
+        urls.size() <= 3 &&
+        (urls.size() == 0 || (urls[0] is string && urls[0].size() >= 1 && urls[0].size() <= 2000));
+    }
+
+    function isValidComplaint(data) {
+      return data.keys().hasAll([
+          'complaintId', 'citizenId', 'citizenName', 'mobile', 'ward', 'locality',
+          'category', 'description', 'landmark', 'imageUrls', 'observationDate',
+          'continuingIssue', 'status', 'assignedEngineer', 'engineerRemarks',
+          'correctiveAction', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'complaintId', 'citizenId', 'citizenName', 'mobile', 'ward', 'locality',
+          'category', 'description', 'latitude', 'longitude', 'landmark', 'imageUrls',
+          'observationDate', 'continuingIssue', 'status', 'assignedEngineer',
+          'engineerRemarks', 'correctiveAction', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.complaintId) &&
+        isValidId(data.citizenId) &&
+        data.citizenName is string && data.citizenName.size() >= 2 && data.citizenName.size() <= 100 &&
+        data.mobile is string && data.mobile.size() >= 10 && data.mobile.size() <= 15 &&
+        isValidWard(data.ward) &&
+        data.locality is string && data.locality.size() >= 2 && data.locality.size() <= 120 &&
+        isValidCategory(data.category) &&
+        data.description is string && data.description.size() >= 10 && data.description.size() <= 2000 &&
+        (!('latitude' in data) || data.latitude == null || (data.latitude is number && data.latitude >= -90 && data.latitude <= 90)) &&
+        (!('longitude' in data) || data.longitude == null || (data.longitude is number && data.longitude >= -180 && data.longitude <= 180)) &&
+        data.landmark is string && data.landmark.size() >= 2 && data.landmark.size() <= 200 &&
+        isValidImageUrls(data.imageUrls) &&
+        data.observationDate is string && data.observationDate.size() >= 8 && data.observationDate.size() <= 40 &&
+        data.continuingIssue is bool &&
+        isValidStatus(data.status) &&
+        data.assignedEngineer is string && data.assignedEngineer.size() <= 100 &&
+        data.engineerRemarks is string && data.engineerRemarks.size() <= 2000 &&
+        data.correctiveAction is string && data.correctiveAction.size() <= 2000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidStatusTransition(prevStatus, nextStatus) {
+      return prevStatus == nextStatus ||
+        (prevStatus == 'Submitted' && nextStatus in ['Acknowledged', 'In Progress', 'Referred for Laboratory Testing']) ||
+        (prevStatus == 'Acknowledged' && nextStatus in ['In Progress', 'Referred for Laboratory Testing', 'Resolved']) ||
+        (prevStatus == 'In Progress' && nextStatus in ['Referred for Laboratory Testing', 'Resolved']) ||
+        (prevStatus == 'Referred for Laboratory Testing' && nextStatus in ['In Progress', 'Resolved']) ||
+        (prevStatus == 'Resolved' && nextStatus == 'Closed');
+    }
+
+    function isValidHistory(data) {
+      return data.keys().hasAll([
+          'historyId', 'complaintId', 'previousStatus', 'newStatus',
+          'remarks', 'updatedBy', 'updatedByUid', 'timestamp'
+        ]) &&
+        data.keys().hasOnly([
+          'historyId', 'complaintId', 'previousStatus', 'newStatus',
+          'remarks', 'updatedBy', 'updatedByUid', 'timestamp'
+        ]) &&
+        isValidId(data.historyId) &&
+        isValidId(data.complaintId) &&
+        (data.previousStatus == 'None' || isValidStatus(data.previousStatus)) &&
+        isValidStatus(data.newStatus) &&
+        data.remarks is string && data.remarks.size() >= 1 && data.remarks.size() <= 1000 &&
+        data.updatedBy is string && data.updatedBy.size() >= 2 && data.updatedBy.size() <= 100 &&
+        isValidId(data.updatedByUid) &&
+        data.timestamp is timestamp;
+    }
+
+    function isValidPublicTracking(data) {
+      return data.keys().hasAll([
+          'complaintId', 'ward', 'locality', 'landmark', 'category',
+          'observationDate', 'continuingIssue', 'status', 'assignedEngineer',
+          'engineerRemarks', 'correctiveAction', 'verificationLast4',
+          'timeline', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'complaintId', 'ward', 'locality', 'landmark', 'category',
+          'observationDate', 'continuingIssue', 'status', 'assignedEngineer',
+          'engineerRemarks', 'correctiveAction', 'verificationLast4',
+          'timeline', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.complaintId) &&
+        isValidWard(data.ward) &&
+        data.locality is string && data.locality.size() >= 2 && data.locality.size() <= 120 &&
+        data.landmark is string && data.landmark.size() >= 2 && data.landmark.size() <= 200 &&
+        isValidCategory(data.category) &&
+        data.observationDate is string && data.observationDate.size() >= 8 && data.observationDate.size() <= 40 &&
+        data.continuingIssue is bool &&
+        isValidStatus(data.status) &&
+        data.assignedEngineer is string && data.assignedEngineer.size() <= 100 &&
+        data.engineerRemarks is string && data.engineerRemarks.size() <= 2000 &&
+        data.correctiveAction is string && data.correctiveAction.size() <= 2000 &&
+        data.verificationLast4 is string && data.verificationLast4.matches('^[0-9]{4}$') &&
+        data.timeline is list && data.timeline.size() >= 1 && data.timeline.size() <= 25 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidArticle(data) {
+      return data.keys().hasAll([
+          'articleId', 'title', 'category', 'content', 'sourceName',
+          'sourceUrl', 'lastReviewedAt', 'approvedByPhed', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'articleId', 'title', 'titleKn', 'category', 'content', 'contentKn',
+          'sourceName', 'sourceUrl', 'lastReviewedAt', 'approvedByPhed',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.articleId) &&
+        data.title is string && data.title.size() >= 5 && data.title.size() <= 200 &&
+        (!('titleKn' in data) || (data.titleKn is string && data.titleKn.size() <= 250)) &&
+        data.category in [
+          'Safe drinking-water storage',
+          'Proper boiling practices',
+          'Household purification guidance',
+          'Tap and pipeline hygiene',
+          'Warning signs of potentially unsafe water',
+          'Water-borne illness awareness',
+          'Appropriate health precautions'
+        ] &&
+        data.content is string && data.content.size() >= 20 && data.content.size() <= 8000 &&
+        (!('contentKn' in data) || (data.contentKn is string && data.contentKn.size() <= 8000)) &&
+        data.sourceName is string && data.sourceName.size() >= 2 && data.sourceName.size() <= 120 &&
+        data.sourceUrl is string && data.sourceUrl.size() >= 10 && data.sourceUrl.size() <= 500 &&
+        data.lastReviewedAt is string && data.lastReviewedAt.size() >= 8 && data.lastReviewedAt.size() <= 40 &&
+        data.approvedByPhed is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // Users collection (PII isolated to owner or engineer/admin)
+    match /users/{uid} {
+      allow get: if isSignedIn() && isValidId(uid) && (request.auth.uid == uid || isEngineerOrAdmin());
+      allow list: if isEngineerOrAdmin() && resource.data.uid is string;
+      allow create: if isVerified() &&
+        isValidId(uid) &&
+        request.auth.uid == uid &&
+        isValidUser(incoming()) &&
+        incoming().uid == uid &&
+        incoming().role == 'citizen' &&
+        incoming().createdAt == request.time;
+      allow update: if isVerified() &&
+        isValidId(uid) &&
+        isValidUser(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          (request.auth.uid == uid &&
+            incoming().role == existing().role &&
+            incoming().email == existing().email &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'mobile', 'locality'])) ||
+          isAdmin()
+        );
+      allow delete: if isAdmin() && isValidId(uid);
+    }
+
+    // Trusted Role Markers
+    match /admins/{uid} {
+      allow get: if isSignedIn() && isValidId(uid) && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin() && resource.data.uid is string;
+      allow create, update: if isAdmin() && isValidId(uid) && isValidRoleMarker(incoming());
+      allow delete: if isAdmin() && isValidId(uid);
+    }
+
+    match /engineers/{uid} {
+      allow get: if isSignedIn() && isValidId(uid) && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin() && resource.data.uid is string;
+      allow create, update: if isAdmin() && isValidId(uid) && isValidRoleMarker(incoming());
+      allow delete: if isAdmin() && isValidId(uid);
+    }
+
+    // Complaints collection
+    match /complaints/{complaintId} {
+      allow get: if isSignedIn() && isValidId(complaintId) && (
+        existing().citizenId == request.auth.uid || isEngineerOrAdmin()
+      );
+      allow list: if isSignedIn() && (
+        resource.data.citizenId == request.auth.uid || isEngineerOrAdmin()
+      );
+      allow create: if isVerified() &&
+        isValidId(complaintId) &&
+        isValidComplaint(incoming()) &&
+        incoming().complaintId == complaintId &&
+        incoming().citizenId == request.auth.uid &&
+        incoming().status == 'Submitted' &&
+        incoming().assignedEngineer == '' &&
+        incoming().engineerRemarks == '' &&
+        incoming().correctiveAction == '' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/public_complaint_tracking/$(complaintId));
+
+      allow update: if isVerified() &&
+        isValidId(complaintId) &&
+        isValidComplaint(incoming()) &&
+        isEngineerOrAdmin() &&
+        (existing().status != 'Closed' || isAdmin()) &&
+        incoming().complaintId == existing().complaintId &&
+        incoming().citizenId == existing().citizenId &&
+        incoming().citizenName == existing().citizenName &&
+        incoming().mobile == existing().mobile &&
+        incoming().ward == existing().ward &&
+        incoming().locality == existing().locality &&
+        incoming().category == existing().category &&
+        incoming().description == existing().description &&
+        incoming().landmark == existing().landmark &&
+        incoming().imageUrls == existing().imageUrls &&
+        incoming().observationDate == existing().observationDate &&
+        incoming().continuingIssue == existing().continuingIssue &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isValidStatusTransition(existing().status, incoming().status) &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'assignedEngineer', 'engineerRemarks', 'correctiveAction', 'updatedAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(complaintId);
+    }
+
+    // Public PII-redacted tracking lookup (strictly exact ID get only, no list)
+    match /public_complaint_tracking/{complaintId} {
+      allow get: if isValidId(complaintId);
+      allow list: if false;
+      allow create: if isVerified() &&
+        isValidId(complaintId) &&
+        isValidPublicTracking(incoming()) &&
+        incoming().complaintId == complaintId &&
+        incoming().status == 'Submitted' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        getAfter(/databases/$(database)/documents/complaints/$(complaintId)).data.citizenId == request.auth.uid;
+
+      allow update: if isVerified() &&
+        isValidId(complaintId) &&
+        isValidPublicTracking(incoming()) &&
+        isEngineerOrAdmin() &&
+        incoming().complaintId == existing().complaintId &&
+        incoming().verificationLast4 == existing().verificationLast4 &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'assignedEngineer', 'engineerRemarks', 'correctiveAction', 'timeline', 'updatedAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(complaintId);
+    }
+
+    // Immutable Complaint Audit History
+    match /complaint_history/{historyId} {
+      allow get: if isSignedIn() && isValidId(historyId) && (
+        isEngineerOrAdmin() ||
+        get(/databases/$(database)/documents/complaints/$(existing().complaintId)).data.citizenId == request.auth.uid
+      );
+      allow list: if isSignedIn() && (
+        resource.data.updatedByUid == request.auth.uid || isEngineerOrAdmin()
+      );
+      allow create: if isVerified() &&
+        isValidId(historyId) &&
+        isValidHistory(incoming()) &&
+        incoming().historyId == historyId &&
+        incoming().updatedByUid == request.auth.uid &&
+        incoming().timestamp == request.time &&
+        (
+          isEngineerOrAdmin() ||
+          (incoming().previousStatus == 'None' &&
+           incoming().newStatus == 'Submitted' &&
+           getAfter(/databases/$(database)/documents/complaints/$(incoming().complaintId)).data.citizenId == request.auth.uid)
+        );
+      allow update, delete: if false;
+    }
+
+    // Curated Awareness Articles
+    match /awareness_articles/{articleId} {
+      allow get: if isValidId(articleId) && (
+        existing().approvedByPhed == true || isEngineerOrAdmin()
+      );
+      allow list: if resource.data.approvedByPhed == true || isEngineerOrAdmin();
+      allow create: if isVerified() &&
+        isValidId(articleId) &&
+        isEngineerOrAdmin() &&
+        isValidArticle(incoming()) &&
+        incoming().articleId == articleId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerified() &&
+        isValidId(articleId) &&
+        isEngineerOrAdmin() &&
+        isValidArticle(incoming()) &&
+        incoming().articleId == existing().articleId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'titleKn', 'category', 'content', 'contentKn',
+          'sourceName', 'sourceUrl', 'lastReviewedAt', 'approvedByPhed', 'updatedAt'
+        ]);
+      allow delete: if isVerified() && isValidId(articleId) && isAdmin();
+    }
+  }
+}

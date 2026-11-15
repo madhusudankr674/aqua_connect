@@ -1,0 +1,496 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered citizen, engineer, or administrator profile.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "mobile": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 15
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "role": {
+          "type": "string",
+          "enum": ["citizen", "engineer", "admin"]
+        },
+        "locality": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "RoleMarker": {
+      "title": "RoleMarker",
+      "description": "Server-verified role assignment marker for engineers or admins.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "assignedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "assignedAt"]
+    },
+    "Complaint": {
+      "title": "Complaint",
+      "description": "Citizen drinking-water observation and issue report.",
+      "type": "object",
+      "properties": {
+        "complaintId": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "citizenId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "citizenName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "mobile": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 15
+        },
+        "ward": {
+          "type": "string",
+          "enum": ["Ward 1", "Ward 2", "Ward 3", "Ward 4", "Ward 5", "Other"]
+        },
+        "locality": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Muddy or cloudy water",
+            "Unusual colour",
+            "Unusual smell",
+            "Unusual taste",
+            "Visible particles",
+            "Pipeline leakage",
+            "Irregular water supply",
+            "Low water pressure",
+            "Other"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 2000
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "landmark": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "imageUrls": {
+          "type": "array"
+        },
+        "observationDate": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 40
+        },
+        "continuingIssue": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Submitted",
+            "Acknowledged",
+            "In Progress",
+            "Referred for Laboratory Testing",
+            "Resolved",
+            "Closed"
+          ]
+        },
+        "assignedEngineer": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 100
+        },
+        "engineerRemarks": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "correctiveAction": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "complaintId",
+        "citizenId",
+        "citizenName",
+        "mobile",
+        "ward",
+        "locality",
+        "category",
+        "description",
+        "landmark",
+        "imageUrls",
+        "observationDate",
+        "continuingIssue",
+        "status",
+        "assignedEngineer",
+        "engineerRemarks",
+        "correctiveAction",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ComplaintHistory": {
+      "title": "ComplaintHistory",
+      "description": "Immutable audit log entry for complaint status changes.",
+      "type": "object",
+      "properties": {
+        "historyId": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "complaintId": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "previousStatus": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Submitted",
+            "Acknowledged",
+            "In Progress",
+            "Referred for Laboratory Testing",
+            "Resolved",
+            "Closed"
+          ]
+        },
+        "newStatus": {
+          "type": "string",
+          "enum": [
+            "Submitted",
+            "Acknowledged",
+            "In Progress",
+            "Referred for Laboratory Testing",
+            "Resolved",
+            "Closed"
+          ]
+        },
+        "remarks": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "updatedByUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "historyId",
+        "complaintId",
+        "previousStatus",
+        "newStatus",
+        "remarks",
+        "updatedBy",
+        "updatedByUid",
+        "timestamp"
+      ]
+    },
+    "PublicComplaintTracking": {
+      "title": "PublicComplaintTracking",
+      "description": "PII-redacted public status projection accessible strictly by exact complaint ID and verified by mobile last-4 digits.",
+      "type": "object",
+      "properties": {
+        "complaintId": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ward": {
+          "type": "string",
+          "enum": ["Ward 1", "Ward 2", "Ward 3", "Ward 4", "Ward 5", "Other"]
+        },
+        "locality": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "landmark": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Muddy or cloudy water",
+            "Unusual colour",
+            "Unusual smell",
+            "Unusual taste",
+            "Visible particles",
+            "Pipeline leakage",
+            "Irregular water supply",
+            "Low water pressure",
+            "Other"
+          ]
+        },
+        "observationDate": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 40
+        },
+        "continuingIssue": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Submitted",
+            "Acknowledged",
+            "In Progress",
+            "Referred for Laboratory Testing",
+            "Resolved",
+            "Closed"
+          ]
+        },
+        "assignedEngineer": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 100
+        },
+        "engineerRemarks": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "correctiveAction": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "verificationLast4": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4,
+          "pattern": "^[0-9]{4}$"
+        },
+        "timeline": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "complaintId",
+        "ward",
+        "locality",
+        "landmark",
+        "category",
+        "observationDate",
+        "continuingIssue",
+        "status",
+        "assignedEngineer",
+        "engineerRemarks",
+        "correctiveAction",
+        "verificationLast4",
+        "timeline",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AwarenessArticle": {
+      "title": "AwarenessArticle",
+      "description": "Curated safe drinking-water educational article reviewed by local PHED/engineer.",
+      "type": "object",
+      "properties": {
+        "articleId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 100,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 200
+        },
+        "titleKn": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 250
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Safe drinking-water storage",
+            "Proper boiling practices",
+            "Household purification guidance",
+            "Tap and pipeline hygiene",
+            "Warning signs of potentially unsafe water",
+            "Water-borne illness awareness",
+            "Appropriate health precautions"
+          ]
+        },
+        "content": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 8000
+        },
+        "contentKn": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 8000
+        },
+        "sourceName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "sourceUrl": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "lastReviewedAt": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 40
+        },
+        "approvedByPhed": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "articleId",
+        "title",
+        "category",
+        "content",
+        "sourceName",
+        "sourceUrl",
+        "lastReviewedAt",
+        "approvedByPhed",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile documents containing citizen or engineer role and contact info."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/RoleMarker" },
+      "description": "Trusted admin role assignment documents."
+    },
+    "/engineers/{uid}": {
+      "schema": { "$ref": "#/entities/RoleMarker" },
+      "description": "Trusted engineer role assignment documents."
+    },
+    "/complaints/{complaintId}": {
+      "schema": { "$ref": "#/entities/Complaint" },
+      "description": "Drinking-water issue reports submitted by citizens."
+    },
+    "/complaint_history/{historyId}": {
+      "schema": { "$ref": "#/entities/ComplaintHistory" },
+      "description": "Immutable audit log of complaint status transitions."
+    },
+    "/public_complaint_tracking/{complaintId}": {
+      "schema": { "$ref": "#/entities/PublicComplaintTracking" },
+      "description": "PII-redacted public lookup projection for citizen tracking by exact complaint ID."
+    },
+    "/awareness_articles/{articleId}": {
+      "schema": { "$ref": "#/entities/AwarenessArticle" },
+      "description": "Curated safe-water educational articles reviewed by local PHED/engineer."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Aqua Connect — Community Water Reporting & Awareness Portal",
+  "description": "Report drinking-water issues, track complaint resolution, and access safe-water awareness for Mahatma Gandhi Herooru Grama Panchayat, Tumakuru.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
